@@ -1,0 +1,4 @@
+﻿<?xml version="1.0"?>
+<spider version="0.1">
+    <copy_contents from_href="ftp://cpan.mirror.ac.za/RECENT-1M.json" />
+</spider>

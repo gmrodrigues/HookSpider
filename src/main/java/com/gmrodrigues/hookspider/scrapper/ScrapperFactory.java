@@ -4,12 +4,7 @@ import com.gmrodrigues.hookspider.model.DownloadedUriModel;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -17,12 +12,10 @@ import java.util.Map;
 
 public class ScrapperFactory
 {
-
     private static final String scrapperTag = "scrapper_foreach";
-
     Map<String, ScrapperXquery> scrapperXquery = new HashMap<String, ScrapperXquery>();
 
-    public void loadFromConfigInputStreamAndDownloadedUrisMap(InputStream configInputStream, Map<URI, DownloadedUriModel> downloadedUrisMap) throws FileNotFoundException
+    public void loadFromConfigInputStreamAndDownloadedUrisMap(File baseDir, InputStream configInputStream, Map<URI, DownloadedUriModel> downloadedUrisMap) throws FileNotFoundException
     {
 
         XMLConfiguration xconfig = new XMLConfiguration();
@@ -85,7 +78,7 @@ public class ScrapperFactory
                     }
                 }
                 if (outFileName != null && !outFileName.isEmpty()) {
-                    File outFile = new File(outFileName);
+                    File outFile = new File(baseDir, outFileName);
                     OutputStream out = new FileOutputStream(outFile);
                     sx.setOutStream(out);
                 }
@@ -99,25 +92,25 @@ public class ScrapperFactory
         }
     }
 
-    public void loadFromConfigFileAndDownloadedUrisMap(File configFile, Map<URI, DownloadedUriModel> downloadedUrisMap) throws FileNotFoundException
+    public void loadFromConfigFileAndDownloadedUrisMap(File baseDir, File configFile, Map<URI, DownloadedUriModel> downloadedUrisMap) throws FileNotFoundException
     {
         InputStream configInputStream = new FileInputStream(configFile);
-        loadFromConfigInputStreamAndDownloadedUrisMap(configInputStream, downloadedUrisMap);
+        loadFromConfigInputStreamAndDownloadedUrisMap(baseDir, configInputStream, downloadedUrisMap);
     }
 
-    public void loadFromConfigInputStreamAndDownloadedUrisList(InputStream configInputStream, Iterable<DownloadedUriModel> downloadedUrisList) throws FileNotFoundException
+    public void loadFromConfigInputStreamAndDownloadedUrisList(File baseDir, InputStream configInputStream, Iterable<DownloadedUriModel> downloadedUrisList) throws FileNotFoundException
     {
         Map<URI, DownloadedUriModel> downloadedUrisMap = new HashMap<URI, DownloadedUriModel>();
         for (DownloadedUriModel du : downloadedUrisList) {
             downloadedUrisMap.put(du.getUri(), du);
         }
-        loadFromConfigInputStreamAndDownloadedUrisMap(configInputStream, downloadedUrisMap);
+        loadFromConfigInputStreamAndDownloadedUrisMap(baseDir, configInputStream, downloadedUrisMap);
     }
 
-    public void loadFromConfigFileAndDownloadedUrisList(File configFile, Iterable<DownloadedUriModel> downloadedUrisList) throws FileNotFoundException
+    public void loadFromConfigFileAndDownloadedUrisList(File baseDir, File configFile, Iterable<DownloadedUriModel> downloadedUrisList) throws FileNotFoundException
     {
         InputStream configInputStream = new FileInputStream(configFile);
-        loadFromConfigInputStreamAndDownloadedUrisList(configInputStream, downloadedUrisList);
+        loadFromConfigInputStreamAndDownloadedUrisList(baseDir, configInputStream, downloadedUrisList);
     }
 
     public Map<String, ScrapperXquery> getInstancesMap()

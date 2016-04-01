@@ -203,7 +203,7 @@ public class DownloaderFactory
     {
         try {
             URI uri = new URI(href);
-            downloader.getState().addToCrawlQuewe(uri);
+            downloader.getState().addToCrawlQueue(uri);
             if (linkExtractorId == null || linkExtractorId.isEmpty()) {
                 return;
             }

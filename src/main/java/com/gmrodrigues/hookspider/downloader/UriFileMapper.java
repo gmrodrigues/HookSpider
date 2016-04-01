@@ -1,5 +1,7 @@
 package com.gmrodrigues.hookspider.downloader;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.io.File;
 import java.net.URI;
 
@@ -22,6 +24,8 @@ public class UriFileMapper
         if (path == null || "".equals(path)) {
             path = "#";
         }
+        path += ".local";
+        path = StringEscapeUtils.escapeXml(path);
 
         File file = new File(basedir,
                 new File(host, new File(protocol, new File(path).getPath()).getPath())

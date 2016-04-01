@@ -24,4 +24,5 @@ dependencies {
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'sshtools:j2ssh-core:0.2.9'
     compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.16'
+    compile 'org.apache.commons:commons-lang3:3.4'
 }

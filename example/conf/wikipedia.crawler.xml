@@ -1,0 +1,41 @@
+﻿<?xml version="1.0"?>
+<spider version="0.1">
+
+    <extract_links if_url_filter="download" use="pages_xpath"/>
+    <extract_links from_href="https://en.wikibooks.org/wiki/Computers_for_Beginners" use="pages_xpath" />
+
+    <url_filter id="download">
+        @ en.wikibooks.org
+        / m{wiki/Computers_for_Beginners}
+    </url_filter>
+
+    <link_extractor id="pages_xpath"  type="xpath1.0">
+        //a/@href
+    </link_extractor>
+
+    <scrapper_foreach
+            id="wikibook"
+            type="xquery1.0"
+            out_file="wikibook.xml"
+            root_tag="pages"
+            html_cleaning="true"
+            >
+        <scrapper_filter matched_url_filter="download"/>
+        <scrapper_filter found_with_extractor="pages_xpath"/>
+        <scrapper_filter scanned_with_extractor="pages_xpath"/>
+        <scrapper_filter scanned_for_link_extraction="true"/>
+        <scrapper_filter referer=""/>
+        <scrapper_filter referer_matched=""/>
+        <![CDATA[
+        <page>
+            <name>{//H1[@id='firstHeading']/text()}</name>
+            {for $x in //DIV[@id='mw-content-text']/*[self::H2 or self::H3 or self::P]
+            return
+                <item type="{local-name($x)}">
+                    {normalize-space($x)}
+                </item>
+            }
+        </page>
+		]]>
+    </scrapper_foreach>
+</spider>

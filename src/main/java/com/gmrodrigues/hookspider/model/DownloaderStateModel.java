@@ -1,6 +1,7 @@
 package com.gmrodrigues.hookspider.model;
 
 import com.gmrodrigues.hookspider.downloader.UriFileMapper;
+import com.gmrodrigues.hookspider.utils.Uris;
 
 import java.io.File;
 import java.net.URI;
@@ -12,11 +13,11 @@ public class DownloaderStateModel
 {
     private File baseDir;
 
-    private Queue<URI> crawlQuewe;
+    private Queue<URI> crawlQueue;
     private Queue<URI> downloadQueue;
     private Map<URI, DownloadedUriModel> downloadedURIs;
     private HashSet<URI> ignoredURIs;
-    private Set<URI> alreadyKnownURIs;
+    private AlreadyKnownUris alreadyKnownURIs;
     private Map<URI, URI> referers;
     private Map<URI, String> foundWithExtractor;
 
@@ -24,12 +25,12 @@ public class DownloaderStateModel
 
     public DownloaderStateModel()
     {
-        crawlQuewe = new LinkedList<URI>();
+        crawlQueue = new LinkedList<URI>();
         downloadQueue = new LinkedList<URI>();
         ;
         downloadedURIs = new ConcurrentHashMap<URI, DownloadedUriModel>();
         ignoredURIs = new HashSet<URI>();
-        alreadyKnownURIs = new HashSet<URI>();
+        alreadyKnownURIs = new AlreadyKnownUris();
         referers = new ConcurrentHashMap<URI, URI>();
         foundWithExtractor = new ConcurrentHashMap<URI, String>();
     }
@@ -37,7 +38,7 @@ public class DownloaderStateModel
     public boolean downloadedAll()
     {
         synchronized (uriQueueLock) {
-            return (crawlQuewe.size() + downloadQueue.size()) < 1;
+            return (crawlQueue.size() + downloadQueue.size()) < 1;
         }
     }
 
@@ -49,7 +50,7 @@ public class DownloaderStateModel
 
             if (!passedCrawlTestNames.isEmpty()
                     && !config.getCrawlTester().getUriTestList().isEmpty()) {
-                addToCrawlQuewe(uri);
+                addToCrawlQueue(uri);
                 return;
             }
             else {
@@ -67,19 +68,20 @@ public class DownloaderStateModel
 
     public void addToDownloadQueue(URI uri)
     {
-        if (alreadyKnownURIs.contains(uri)) {
+        if (alreadyKnownURIs.isKnown(uri)) {
             return;
         }
         alreadyKnownURIs.add(uri);
         downloadQueue.add(uri);
     }
 
-    public void addToCrawlQuewe(URI uri)
+    public void addToCrawlQueue(URI uri)
     {
-        if (alreadyKnownURIs.contains(uri)) {
+        if (alreadyKnownURIs.isKnown(uri)) {
             return;
         }
-        crawlQuewe.add(uri);
+        alreadyKnownURIs.add(uri);
+        crawlQueue.add(uri);
     }
 
     public void markAsDownloaded(DownloadedUriModel downloaded)
@@ -121,7 +123,7 @@ public class DownloaderStateModel
     public URI pollUriFromCrawlQueue()
     {
         synchronized (uriQueueLock) {
-            return crawlQuewe.poll();
+            return crawlQueue.poll();
         }
     }
 
@@ -142,14 +144,14 @@ public class DownloaderStateModel
         this.baseDir = baseDir;
     }
 
-    public Queue<URI> getCrawlQuewe()
+    public Queue<URI> getCrawlQueue()
     {
-        return crawlQuewe;
+        return crawlQueue;
     }
 
-    public void setCrawlQuewe(Queue<URI> crawlQuewe)
+    public void setCrawlQueue(Queue<URI> crawlQueue)
     {
-        this.crawlQuewe = crawlQuewe;
+        this.crawlQueue = crawlQueue;
     }
 
     public Queue<URI> getDownloadQueue()
@@ -182,16 +184,6 @@ public class DownloaderStateModel
         this.ignoredURIs = ignoredURIs;
     }
 
-    public Set<URI> getAlreadyKnownURIs()
-    {
-        return alreadyKnownURIs;
-    }
-
-    public void setAlreadyKnownURIs(Set<URI> alreadyKnownURIs)
-    {
-        this.alreadyKnownURIs = alreadyKnownURIs;
-    }
-
     public Map<URI, URI> getReferers()
     {
         return referers;
@@ -217,10 +209,20 @@ public class DownloaderStateModel
         return uriQueueLock;
     }
 
+    private class AlreadyKnownUris {
+        private Set<URI> uris = new HashSet<URI>();
+        public void add(URI uri){
+            uris.add(Uris.removeFragment(uri));
+        }
+        public boolean isKnown(URI uri){
+            return uris.contains(Uris.removeFragment(uri));
+        }
+    }
+
     @Override
     public String toString()
     {
-        return "DownloaderStateModel [crawlQuewe=" + crawlQuewe
+        return "DownloaderStateModel [crawlQueue=" + crawlQueue
                 + ", downloadQueue=" + downloadQueue + ", downloadedURIs="
                 + downloadedURIs + ", ignoredURIs=" + ignoredURIs
                 + ", alreadyKnownURIs=" + alreadyKnownURIs + ", referers="

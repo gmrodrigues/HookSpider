@@ -105,9 +105,9 @@ public class ScrapperXquery
 
     private void writeRootCloseTag(OutputStream out) throws IOException
     {
-        out.write("<".getBytes());
+        out.write("</".getBytes());
         out.write(rootTag.getBytes());
-        out.write("/>\n".getBytes());
+        out.write(">\n".getBytes());
     }
 
     private void insertContextNode(DownloadedUriModel du, Document doc)

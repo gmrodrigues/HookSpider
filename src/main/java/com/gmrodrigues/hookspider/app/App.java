@@ -34,61 +34,65 @@ public class App
         File baseDir = null;
         DownloaderFactory factory = null;
 
-        try {
-            confFile = new File(confFilename).getCanonicalFile();
-
-            if (baseDirname == null) {
-                baseDirname = confFile.getParent();
-            }
-
-            baseDir = new File(baseDirname).getCanonicalFile();
-
-            factory = new DownloaderFactory();
-            factory.setBaseDir(baseDir);
-            factory.setConfFile(confFile);
-            factory.load();
-        }
-        catch (ConfigurationException e) {
-            System.err.println("Problem loading configuration: " + e.getMessage());
-            System.exit(0);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            printHelpAndQuit(options);
-        }
-
-        Downloader dw = factory.newInstance();
-        dw.downloadAll();
-
-        File reportFile = new File(baseDir, "wrd_registry." + confFile.getName());
-
-        DownloaderRegistryTool rc = new DownloaderRegistryTool(dw.getState());
-
-        PrintStream out = new PrintStream(reportFile);
-        rc.writeModelToXml(out);
-        IOUtils.closeQuietly(out);
-        System.out.println("Report writen to file " + reportFile.toString());
-
-        DownloaderStateModel sm = new DownloaderStateModel();
-        sm.setBaseDir(baseDir);
-        rc.setDownloaderState(sm);
-        rc.loadModelFromXml(new FileInputStream(reportFile));
-        rc.writeModelToXml(new PrintStream(new File("state.xml")));
-
-
-        ScrapperFactory sf = new ScrapperFactory();
-        sf.loadFromConfigFileAndDownloadedUrisMap(confFile, dw.getState().getDownloadedURIs());
-
-        Map<String, ScrapperXquery> scrappersMap = sf.getInstancesMap();
-        for (String scrapperName : scrappersMap.keySet()) {
-            ScrapperXquery sx = scrappersMap.get(scrapperName);
+        if (confFilename != null) {
             try {
-                sx.scrap();
+                confFile = new File(confFilename).getCanonicalFile();
+
+                if (baseDirname == null) {
+                    baseDirname = confFile.getParent();
+                }
+
+                baseDir = new File(baseDirname).getCanonicalFile();
+
+                factory = new DownloaderFactory();
+                factory.setBaseDir(baseDir);
+                factory.setConfFile(confFile);
+                factory.load();
             }
-            catch (SAXException e) {
-                e.printStackTrace();
+            catch (ConfigurationException e) {
+                System.err.println("Problem loading configuration: " + e.getMessage());
                 System.exit(0);
             }
+            catch (Exception e) {
+                e.printStackTrace();
+                printHelpAndQuit(options);
+            }
+
+            Downloader dw = factory.newInstance();
+            dw.downloadAll();
+
+            File reportFile = new File(baseDir, "wrd_registry." + confFile.getName());
+
+            DownloaderRegistryTool rc = new DownloaderRegistryTool(dw.getState());
+
+            PrintStream out = new PrintStream(reportFile);
+            rc.writeModelToXml(out);
+            IOUtils.closeQuietly(out);
+            System.out.println("Report writen to file " + reportFile.toString());
+
+            DownloaderStateModel sm = new DownloaderStateModel();
+            sm.setBaseDir(baseDir);
+            rc.setDownloaderState(sm);
+            rc.loadModelFromXml(new FileInputStream(reportFile));
+            rc.writeModelToXml(new PrintStream(new File(baseDir, "state."+confFile.getName())));
+
+            ScrapperFactory sf = new ScrapperFactory();
+            sf.loadFromConfigFileAndDownloadedUrisMap(baseDir, confFile, dw.getState().getDownloadedURIs());
+
+            Map<String, ScrapperXquery> scrappersMap = sf.getInstancesMap();
+            for (String scrapperName : scrappersMap.keySet()) {
+                ScrapperXquery sx = scrappersMap.get(scrapperName);
+                try {
+                    sx.scrap();
+                }
+                catch (SAXException e) {
+                    e.printStackTrace();
+                    System.exit(0);
+                }
+            }
+        }
+        else {
+            printHelpAndQuit(options);
         }
         System.exit(0);
     }
